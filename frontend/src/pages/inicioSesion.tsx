@@ -1,5 +1,7 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import LogoRetaceria from '../assets/LogoRetaceria.jpeg'
+import { login } from '../lib/auth'
 
 function UserIcon() {
   return (
@@ -37,12 +39,15 @@ const inputClass =
   'w-full rounded-lg border border-slate-300 bg-white py-2.5 pr-3.5 pl-10 text-[0.95rem] text-slate-800 transition outline-none placeholder:text-slate-400 focus:border-[#2b5faa] focus:ring-3 focus:ring-[#2b5faa]/15'
 
 export default function InicioSesion() {
+  const navigate = useNavigate()
   const [usuario, setUsuario] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [recordarme, setRecordarme] = useState(false)
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    login()
+    navigate('/', { replace: true })
     // TODO: conectar con API de autenticación
   }
 
