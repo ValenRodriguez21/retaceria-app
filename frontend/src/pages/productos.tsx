@@ -1,17 +1,11 @@
 import { useMemo, useState } from 'react'
 import FiltrosProductosPanel from '../components/productos/FiltrosProductosPanel'
 import ProductoModal from '../components/productos/ProductoModal'
-import { productosIniciales, STOCK_BAJO_UMBRAL } from '../data/productosMock'
-import type { FiltrosProducto, Producto, ProductoForm } from '../types/producto'
+import { useProductos } from '../contexts/ProductosContext'
+import { STOCK_BAJO_UMBRAL } from '../data/productosMock'
+import { formatPrecio } from '../lib/format'
+import type { FiltrosProducto, Producto } from '../types/producto'
 import { filtrosVacios } from '../types/producto'
-
-function formatPrecio(precio: number) {
-  return new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0,
-  }).format(precio)
-}
 
 function SearchIcon() {
   return (
@@ -74,7 +68,7 @@ function filtrarProductos(
 }
 
 export default function Productos() {
-  const [productos, setProductos] = useState<Producto[]>(productosIniciales)
+  const { productos, guardarProducto, eliminarProducto } = useProductos()
   const [busqueda, setBusqueda] = useState('')
   const [filtros, setFiltros] = useState<FiltrosProducto>(filtrosVacios)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
@@ -111,20 +105,9 @@ export default function Productos() {
     setProductoEditando(null)
   }
 
-  function guardarProducto(datos: ProductoForm, id?: string) {
-    if (id) {
-      setProductos((prev) => prev.map((p) => (p.id === id ? { ...p, ...datos } : p)))
-    } else {
-      setProductos((prev) => [
-        ...prev,
-        { ...datos, id: crypto.randomUUID() },
-      ])
-    }
-  }
-
-  function eliminarProducto(id: string) {
+  function handleEliminar(id: string) {
     if (window.confirm('¿Eliminar este producto?')) {
-      setProductos((prev) => prev.filter((p) => p.id !== id))
+      eliminarProducto(id)
     }
   }
 
@@ -242,7 +225,7 @@ export default function Productos() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => eliminarProducto(p.id)}
+                          onClick={() => handleEliminar(p.id)}
                           className="cursor-pointer text-sm font-medium text-[#c53030] hover:underline"
                         >
                           Eliminar
