@@ -10,7 +10,7 @@ import { filtrosVacios } from '../types/producto'
 function SearchIcon() {
   return (
     <svg
-      className="pointer-events-none absolute left-3.5 size-[18px] text-slate-400"
+      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-slate-400"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

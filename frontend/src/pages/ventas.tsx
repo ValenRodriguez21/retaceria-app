@@ -15,7 +15,7 @@ import type { ItemCarrito, LineaCarrito } from '../types/venta'
 function SearchIcon() {
   return (
     <svg
-      className="pointer-events-none absolute left-3.5 size-[18px] text-slate-400"
+      className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-slate-400"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -43,7 +43,8 @@ function construirLineas(carrito: ItemCarrito[], productos: Producto[]): LineaCa
 }
 
 export default function Ventas() {
-  const { productos, registrarVenta } = useProductos()
+  const { productos, registrarVenta, ventas } = useProductos()
+  const [vista, setVista] = useState<'nueva' | 'historial'>('nueva')
   const [busqueda, setBusqueda] = useState('')
   const [carrito, setCarrito] = useState<ItemCarrito[]>([])
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
@@ -126,11 +127,25 @@ export default function Ventas() {
 
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="!m-0 !text-2xl !font-bold !text-[#1b3b6f]">Nueva venta</h1>
-        <p className="mt-1 text-sm text-slate-500">
-          Buscá productos, agregalos al carrito y confirmá la venta.
-        </p>
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="!m-0 !text-2xl !font-bold !text-[#1b3b6f]">
+            {vista === 'nueva' ? 'Nueva venta' : 'Historial de ventas'}
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {vista === 'nueva'
+              ? 'Buscá productos, agregalos al carrito y confirmá la venta.'
+              : 'Historial de ventas registradas.'}
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setVista(vista === 'nueva' ? 'historial' : 'nueva')}
+          className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+        >
+          {vista === 'nueva' ? 'Ver historial' : 'Nueva venta'}
+        </button>
       </div>
 
       {ventaExitosa && (
@@ -142,166 +157,213 @@ export default function Ventas() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-5">
-        {/* Buscar y agregar */}
-        <section className="space-y-4 xl:col-span-3">
-          <div className="relative">
-            <SearchIcon />
-            <input
-              type="search"
-              placeholder="Buscar producto por nombre, categoría o color..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pr-3.5 pl-10 text-sm outline-none focus:border-[#2b5faa] focus:ring-3 focus:ring-[#2b5faa]/15"
-            />
-          </div>
-
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="max-h-[420px] overflow-y-auto">
-              {productosConStock.length === 0 ? (
-                <p className="px-4 py-10 text-center text-sm text-slate-500">
-                  {busqueda
-                    ? 'No hay productos que coincidan con la búsqueda.'
-                    : 'No hay productos con stock disponible.'}
-                </p>
-              ) : (
-                <ul className="divide-y divide-slate-100">
-                  {productosConStock.map((p) => {
-                    const enCarrito = cantidadEnCarrito(p.id)
-                    const disponible = p.stock - enCarrito
-                    return (
-                      <li
-                        key={p.id}
-                        className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50/80"
-                      >
-                        <div className="min-w-0">
-                          <p className="font-medium text-[#1b3b6f]">{p.nombre}</p>
-                          <p className="text-xs text-slate-500">
-                            {p.categoria} · {p.color} · {formatPrecio(p.precio)}/
-                            {unidadMedida(p.categoria) === 'metros' ? 'm' : 'u.'} · Stock:{' '}
-                            {disponible} {unidadMedida(p.categoria)}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          disabled={disponible <= 0}
-                          onClick={() => setProductoSeleccionado(p)}
-                          className="shrink-0 cursor-pointer rounded-lg bg-[#2b5faa] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#1b3b6f] disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          Agregar
-                        </button>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
-            </div>
-          </div>
-        </section>
-
-        {/* Carrito */}
-        <section className="xl:col-span-2">
-          <div className="sticky top-6 rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h2 className="!m-0 !text-lg !font-semibold !text-[#1b3b6f]">Carrito</h2>
-              <p className="text-xs text-slate-500">{lineas.length} producto(s)</p>
-            </div>
-
-            {lineas.length === 0 ? (
+      {vista === 'historial' && (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            {ventas.length === 0 ? (
               <p className="px-4 py-10 text-center text-sm text-slate-500">
-                El carrito está vacío. Buscá y agregá productos.
+                No hay ventas registradas aún.
               </p>
             ) : (
-              <>
-                <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
-                  {lineas.map((l) => (
-                    <li key={l.producto.id} className="space-y-2 px-4 py-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium text-[#1b3b6f]">{l.producto.nombre}</p>
-                        <button
-                          type="button"
-                          onClick={() => quitarDelCarrito(l.producto.id)}
-                          className="cursor-pointer text-xs text-[#c53030] hover:underline"
-                        >
-                          Quitar
-                        </button>
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <label className="sr-only" htmlFor={`qty-${l.producto.id}`}>
-                            Cantidad
-                          </label>
-                          <input
-                            id={`qty-${l.producto.id}`}
-                            type="number"
-                            min={cantidadMinima(l.producto.categoria)}
-                            max={l.producto.stock}
-                            step={pasoCantidad(l.producto.categoria)}
-                            value={l.cantidad}
-                            onChange={(e) =>
-                              actualizarCantidad(l.producto.id, Number(e.target.value))
-                            }
-                            className="w-20 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-[#2b5faa]"
-                          />
-                          <span className="text-xs text-slate-500">
-                            {unidadMedida(l.producto.categoria)}
-                          </span>
-                        </div>
-                        <span className="text-sm font-semibold text-[#1b3b6f]">
-                          {formatPrecio(l.subtotal)}
-                        </span>
-                      </div>
-                    </li>
+              <table className="w-full min-w-[720px] text-left text-sm">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                    <th className="px-4 py-3 font-semibold">Nº</th>
+                    <th className="px-4 py-3 font-semibold">Fecha</th>
+                    <th className="px-4 py-3 font-semibold">Productos</th>
+                    <th className="px-4 py-3 font-semibold">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {ventas.map((venta) => (
+                    <tr key={venta.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80">
+                      <td className="px-4 py-3 font-medium text-[#2b5faa]">{venta.id}</td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {new Date(venta.fecha).toLocaleString('es-AR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-slate-700">
+                        {venta.lineas.map((l) => l.nombre).join(', ')}
+                      </td>
+                      <td className="px-4 py-3 font-medium text-[#1b3b6f]">{formatPrecio(venta.total)}</td>
+                    </tr>
                   ))}
-                </ul>
-
-                <div className="border-t border-slate-200 px-4 py-4">
-                  <div className="mb-4 flex items-center justify-between">
-                    <span className="font-semibold text-[#1b3b6f]">Total</span>
-                    <span className="text-xl font-bold text-[#1b3b6f]">{formatPrecio(total)}</span>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setConfirmarAbierto(true)}
-                      className="w-full cursor-pointer rounded-lg bg-[#c53030] py-3 text-sm font-semibold text-white transition hover:bg-[#b91c1c]"
-                    >
-                      Confirmar venta
-                    </button>
-                    <button
-                      type="button"
-                      onClick={vaciarCarrito}
-                      className="w-full cursor-pointer rounded-lg border border-slate-300 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-                    >
-                      Vaciar carrito
-                    </button>
-                  </div>
-                </div>
-              </>
+                </tbody>
+              </table>
             )}
           </div>
-        </section>
-      </div>
+        </div>
+      )}
 
-      <AgregarAlCarritoModal
-        producto={productoSeleccionado}
-        cantidadEnCarrito={
-          productoSeleccionado ? cantidadEnCarrito(productoSeleccionado.id) : 0
-        }
-        onCerrar={() => setProductoSeleccionado(null)}
-        onAgregar={(cantidad) => {
-          if (productoSeleccionado) agregarAlCarrito(productoSeleccionado.id, cantidad)
-        }}
-      />
+      {vista === 'nueva' && (
+        <>
+          <div className="grid gap-6 xl:grid-cols-5">
+            {/* Buscar y agregar */}
+            <section className="space-y-4 xl:col-span-3">
+              <div className="relative">
+                <SearchIcon />
+                <input
+                  type="search"
+                  placeholder="Buscar producto por nombre, categoría o color..."
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                  className="w-full rounded-lg border border-slate-300 bg-white py-2.5 pr-3.5 pl-10 text-sm outline-none focus:border-[#2b5faa] focus:ring-3 focus:ring-[#2b5faa]/15"
+                />
+              </div>
 
-      <ConfirmarVentaModal
-        abierto={confirmarAbierto}
-        lineas={lineas}
-        total={total}
-        onCerrar={() => setConfirmarAbierto(false)}
-        onConfirmar={confirmarVenta}
-      />
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="max-h-[420px] overflow-y-auto">
+                  {productosConStock.length === 0 ? (
+                    <p className="px-4 py-10 text-center text-sm text-slate-500">
+                      {busqueda
+                        ? 'No hay productos que coincidan con la búsqueda.'
+                        : 'No hay productos con stock disponible.'}
+                    </p>
+                  ) : (
+                    <ul className="divide-y divide-slate-100">
+                      {productosConStock.map((p) => {
+                        const enCarrito = cantidadEnCarrito(p.id)
+                        const disponible = p.stock - enCarrito
+                        return (
+                          <li
+                            key={p.id}
+                            className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-50/80"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-medium text-[#1b3b6f]">{p.nombre}</p>
+                              <p className="text-xs text-slate-500">
+                                {p.categoria} · {p.color} · {formatPrecio(p.precio)}/
+                                {unidadMedida(p.categoria) === 'metros' ? 'm' : 'u.'} · Stock:{' '}
+                                {disponible} {unidadMedida(p.categoria)}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={disponible <= 0}
+                              onClick={() => setProductoSeleccionado(p)}
+                              className="shrink-0 cursor-pointer rounded-lg bg-[#2b5faa] px-3 py-2 text-sm font-semibold text-white transition hover:bg-[#1b3b6f] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              Agregar
+                            </button>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </section>
+
+            {/* Carrito */}
+            <section className="xl:col-span-2">
+              <div className="sticky top-6 rounded-xl border border-slate-200 bg-white shadow-sm">
+                <div className="border-b border-slate-200 px-4 py-3">
+                  <h2 className="!m-0 !text-lg !font-semibold !text-[#1b3b6f]">Carrito</h2>
+                  <p className="text-xs text-slate-500">{lineas.length} producto(s)</p>
+                </div>
+
+                {lineas.length === 0 ? (
+                  <p className="px-4 py-10 text-center text-sm text-slate-500">
+                    El carrito está vacío. Buscá y agregá productos.
+                  </p>
+                ) : (
+                  <>
+                    <ul className="max-h-64 divide-y divide-slate-100 overflow-y-auto">
+                      {lineas.map((l) => (
+                        <li key={l.producto.id} className="space-y-2 px-4 py-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium text-[#1b3b6f]">{l.producto.nombre}</p>
+                            <button
+                              type="button"
+                              onClick={() => quitarDelCarrito(l.producto.id)}
+                              className="cursor-pointer text-xs text-[#c53030] hover:underline"
+                            >
+                              Quitar
+                            </button>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <label className="sr-only" htmlFor={`qty-${l.producto.id}`}>
+                                Cantidad
+                              </label>
+                              <input
+                                id={`qty-${l.producto.id}`}
+                                type="number"
+                                min={cantidadMinima(l.producto.categoria)}
+                                max={l.producto.stock}
+                                step={pasoCantidad(l.producto.categoria)}
+                                value={l.cantidad}
+                                onChange={(e) =>
+                                  actualizarCantidad(l.producto.id, Number(e.target.value))
+                                }
+                                className="w-20 rounded border border-slate-300 px-2 py-1 text-sm outline-none focus:border-[#2b5faa]"
+                              />
+                              <span className="text-xs text-slate-500">
+                                {unidadMedida(l.producto.categoria)}
+                              </span>
+                            </div>
+                            <span className="text-sm font-semibold text-[#1b3b6f]">
+                              {formatPrecio(l.subtotal)}
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="border-t border-slate-200 px-4 py-4">
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="font-semibold text-[#1b3b6f]">Total</span>
+                        <span className="text-xl font-bold text-[#1b3b6f]">{formatPrecio(total)}</span>
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setConfirmarAbierto(true)}
+                          className="w-full cursor-pointer rounded-lg bg-[#c53030] py-3 text-sm font-semibold text-white transition hover:bg-[#b91c1c]"
+                        >
+                          Confirmar venta
+                        </button>
+                        <button
+                          type="button"
+                          onClick={vaciarCarrito}
+                          className="w-full cursor-pointer rounded-lg border border-slate-300 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+                        >
+                          Vaciar carrito
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+
+          <AgregarAlCarritoModal
+            producto={productoSeleccionado}
+            cantidadEnCarrito={
+              productoSeleccionado ? cantidadEnCarrito(productoSeleccionado.id) : 0
+            }
+            onCerrar={() => setProductoSeleccionado(null)}
+            onAgregar={(cantidad) => {
+              if (productoSeleccionado) agregarAlCarrito(productoSeleccionado.id, cantidad)
+            }}
+          />
+
+          <ConfirmarVentaModal
+            abierto={confirmarAbierto}
+            lineas={lineas}
+            total={total}
+            onCerrar={() => setConfirmarAbierto(false)}
+            onConfirmar={confirmarVenta}
+          />
+        </>
+      )}
     </div>
   )
 }
