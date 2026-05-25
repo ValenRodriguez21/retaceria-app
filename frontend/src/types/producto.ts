@@ -1,5 +1,6 @@
 export type Producto = {
   id: string
+  codigo: string
   nombre: string
   categoria: string
   color: string
@@ -8,7 +9,7 @@ export type Producto = {
   proveedor: string
 }
 
-export type ProductoForm = Omit<Producto, 'id'>
+export type ProductoForm = Omit<Producto, 'id'> 
 
 export type FiltrosProducto = {
   categoria: string

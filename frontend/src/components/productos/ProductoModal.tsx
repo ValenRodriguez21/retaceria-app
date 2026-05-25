@@ -7,6 +7,7 @@ const inputClass =
 const labelClass = 'mb-1 block text-left text-sm font-semibold text-[#1b3b6f]'
 
 const formularioVacio: ProductoForm = {
+  codigo: '',
   nombre: '',
   categoria: '',
   color: '',
@@ -40,6 +41,7 @@ export default function ProductoModal({
       setForm(
         producto
           ? {
+              codigo: producto.codigo,
               nombre: producto.nombre,
               categoria: producto.categoria,
               color: producto.color,
@@ -85,6 +87,20 @@ export default function ProductoModal({
         </p>
 
         <form className="mt-5 flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="prod-codigo" className={labelClass}>
+              Código
+            </label>
+            <input
+              id="prod-codigo"
+              type="text"
+              required
+              value={form.codigo}
+              onChange={(e) => actualizar('codigo', e.target.value)}
+              className={inputClass}
+              placeholder="Ej. TELA-001"
+            />
+          </div>
           <div>
             <label htmlFor="prod-nombre" className={labelClass}>
               Nombre

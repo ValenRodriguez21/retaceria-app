@@ -1,33 +1,100 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { productosIniciales } from '../data/productosMock'
 import { cantidadValida } from '../lib/unidadMedida'
+import * as productosAPI from '../lib/api/productos'
 import type { Producto, ProductoForm } from '../types/producto'
 import type { ItemCarrito, Venta } from '../types/venta'
 
 type ProductosContextValue = {
   productos: Producto[]
   ventas: Venta[]
-  guardarProducto: (datos: ProductoForm, id?: string) => void
-  eliminarProducto: (id: string) => void
+  loading: boolean
+  guardarProducto: (datos: ProductoForm, id?: string) => Promise<void>
+  eliminarProducto: (id: string) => Promise<void>
   registrarVenta: (items: ItemCarrito[]) => Venta | null
 }
 
 const ProductosContext = createContext<ProductosContextValue | null>(null)
 
+function mapearProductoAPI(apiProducto: productosAPI.ProductoAPI): Producto {
+  return {
+    id: apiProducto.id,
+    codigo: apiProducto.codigo,
+    nombre: apiProducto.nombre,
+    categoria: apiProducto.categoria,
+    color: apiProducto.color,
+    stock: apiProducto.stock,
+    precio: apiProducto.precio_base,
+    proveedor: apiProducto.proveedor,
+  }
+}
+
+function mapearProductoFormAPI(form: ProductoForm): productosAPI.ProductoFormAPI {
+  return {
+    codigo: form.codigo,
+    nombre: form.nombre,
+    precio_base: form.precio,
+    stock: form.stock,
+  }
+}
+
 export function ProductosProvider({ children }: { children: ReactNode }) {
   const [productos, setProductos] = useState<Producto[]>(productosIniciales)
   const [ventas, setVentas] = useState<Venta[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const guardarProducto = useCallback((datos: ProductoForm, id?: string) => {
-    if (id) {
-      setProductos((prev) => prev.map((p) => (p.id === id ? { ...p, ...datos } : p)))
-    } else {
-      setProductos((prev) => [...prev, { ...datos, id: crypto.randomUUID() }])
+  useEffect(() => {
+    async function cargarProductos() {
+      try {
+        const productosDesdeAPI = await productosAPI.fetchProductos()
+        const productosMapeados = productosDesdeAPI.map(mapearProductoAPI)
+        setProductos(productosMapeados)
+      } catch (error) {
+        console.error('Error al cargar productos:', error)
+        // Fallback a datos mock si falla la API
+        setProductos(productosIniciales)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    cargarProductos()
+  }, [])
+
+  const guardarProducto = useCallback(async (datos: ProductoForm, id?: string) => {
+    try {
+      const datosAPI = mapearProductoFormAPI(datos)
+      let productoAPI: productosAPI.ProductoAPI
+
+      if (id) {
+        productoAPI = await productosAPI.updateProducto(id, datosAPI)
+      } else {
+        productoAPI = await productosAPI.createProducto(datosAPI)
+      }
+
+      const productoMapeado = mapearProductoAPI(productoAPI)
+
+      setProductos((prev) => {
+        if (id) {
+          return prev.map((p) => (p.id === id ? productoMapeado : p))
+        } else {
+          return [...prev, productoMapeado]
+        }
+      })
+    } catch (error) {
+      console.error('Error al guardar producto:', error)
+      throw error
     }
   }, [])
 
-  const eliminarProducto = useCallback((id: string) => {
-    setProductos((prev) => prev.filter((p) => p.id !== id))
+  const eliminarProducto = useCallback(async (id: string) => {
+    try {
+      await productosAPI.deleteProducto(id)
+      setProductos((prev) => prev.filter((p) => p.id !== id))
+    } catch (error) {
+      console.error('Error al eliminar producto:', error)
+      throw error
+    }
   }, [])
 
   const registrarVenta = useCallback(
@@ -74,7 +141,7 @@ export function ProductosProvider({ children }: { children: ReactNode }) {
 
   return (
     <ProductosContext.Provider
-      value={{ productos, ventas, guardarProducto, eliminarProducto, registrarVenta }}
+      value={{ productos, ventas, loading, guardarProducto, eliminarProducto, registrarVenta }}
     >
       {children}
     </ProductosContext.Provider>

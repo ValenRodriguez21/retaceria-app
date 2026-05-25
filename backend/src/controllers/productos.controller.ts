@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 
-import * as productosService from '../services/productos.service';
+import * as productosService from '../services/productos.services';
 
 //obtener todos los productos
 export async function obtenerProductos(req: Request, res: Response) {
@@ -15,8 +15,8 @@ export async function obtenerProductos(req: Request, res: Response) {
 //obtener un producto por id
 export async function obtenerProducto(req: Request, res: Response) {
     try {
-        const product = await productosService.obtenerProducto(req.params.id);
-        res.json(product);
+        const producto = await productosService.obtenerProducto(req.params.id as string);
+        res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
     }
@@ -25,28 +25,28 @@ export async function obtenerProducto(req: Request, res: Response) {
 //crear un producto
 export async function crearProducto(req: Request, res: Response) {
     try {
-        const product = await productosService.crearProducto(req.body);
-        res.json(product);
+        const producto = await productosService.crearProducto(req.body);
+        res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
     }
 }
 
 //actualizar un producto
-export async function actualizarProducto(req: Request, res: Response) {
+export async function editarProducto(req: Request, res: Response) {
     try {
-        const product = await productosService.actualizarProducto(req.params.id, req.body);
-        res.json(product);
+        const producto = await productosService.editarProducto(req.params.id as string, req.body);
+        res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
     }
 }
 
 //eliminar un producto
-export async function eliminarProduct(req: Request, res: Response) {
+export async function eliminarProducto(req: Request, res: Response) {
     try {
-        const product = await productosService.eliminarProducto(req.params.id);
-        res.json(product);
+        const producto = await productosService.eliminarProducto(req.params.id as string);
+        res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
     }

@@ -3,6 +3,7 @@ import type { Producto } from '../types/producto'
 export const productosIniciales: Producto[] = [
   {
     id: '1',
+    codigo: 'TELA-001',
     nombre: 'Tela algodón premium',
     categoria: 'Telas',
     color: 'Blanco',
@@ -12,6 +13,7 @@ export const productosIniciales: Producto[] = [
   },
   {
     id: '2',
+    codigo: 'HILO-001',
     nombre: 'Hilo poliéster 500m',
     categoria: 'Hilos',
     color: 'Negro',
@@ -21,6 +23,7 @@ export const productosIniciales: Producto[] = [
   },
   {
     id: '3',
+    codigo: 'ACCE-001',
     nombre: 'Cierre metálico 20 cm',
     categoria: 'Accesorios',
     color: 'Plateado',
@@ -30,6 +33,7 @@ export const productosIniciales: Producto[] = [
   },
   {
     id: '4',
+    codigo: 'ENTR-001',
     nombre: 'Entretela fusible',
     categoria: 'Entretelas',
     color: 'Blanco',
@@ -39,6 +43,7 @@ export const productosIniciales: Producto[] = [
   },
   {
     id: '5',
+    codigo: 'TELA-002',
     nombre: 'Tela lino natural',
     categoria: 'Telas',
     color: 'Beige',
@@ -48,6 +53,7 @@ export const productosIniciales: Producto[] = [
   },
   {
     id: '6',
+    codigo: 'ACCE-002',
     nombre: 'Botón nácar 12mm',
     categoria: 'Accesorios',
     color: 'Marfil',

@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import FiltrosProductosPanel from '../components/productos/FiltrosProductosPanel'
 import ProductoModal from '../components/productos/ProductoModal'
 import { useProductos } from '../contexts/ProductosContext'
 import { STOCK_BAJO_UMBRAL } from '../data/productosMock'
 import { formatPrecio } from '../lib/format'
-import type { FiltrosProducto, Producto } from '../types/producto'
+import type { FiltrosProducto, Producto, ProductoForm } from '../types/producto'
 import { filtrosVacios } from '../types/producto'
 
 function SearchIcon() {
@@ -68,7 +68,7 @@ function filtrarProductos(
 }
 
 export default function Productos() {
-  const { productos, guardarProducto, eliminarProducto } = useProductos()
+  const { productos, guardarProducto, eliminarProducto, loading } = useProductos()
   const [busqueda, setBusqueda] = useState('')
   const [filtros, setFiltros] = useState<FiltrosProducto>(filtrosVacios)
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false)
@@ -105,14 +105,35 @@ export default function Productos() {
     setProductoEditando(null)
   }
 
-  function handleEliminar(id: string) {
+  async function handleGuardar(datos: ProductoForm, id?: string) {
+    try {
+      await guardarProducto(datos, id)
+      cerrarModal()
+    } catch (error) {
+      console.error('Error al guardar producto:', error)
+      alert('Error al guardar el producto. Por favor, intenta nuevamente.')
+    }
+  }
+
+  async function handleEliminar(id: string) {
     if (window.confirm('¿Eliminar este producto?')) {
-      eliminarProducto(id)
+      try {
+        await eliminarProducto(id)
+      } catch (error) {
+        console.error('Error al eliminar producto:', error)
+        alert('Error al eliminar el producto. Por favor, intenta nuevamente.')
+      }
     }
   }
 
   return (
     <div className="space-y-5">
+      {loading && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-800">
+          Cargando productos...
+        </div>
+      )}
+
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="!m-0 !text-2xl !font-bold !text-[#1b3b6f]">Productos</h1>
@@ -178,6 +199,7 @@ export default function Productos() {
           <table className="w-full min-w-[720px] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50 text-slate-500">
+                <th className="px-4 py-3 font-semibold">Código</th>
                 <th className="px-4 py-3 font-semibold">Nombre</th>
                 <th className="px-4 py-3 font-semibold">Categoría</th>
                 <th className="px-4 py-3 font-semibold">Color</th>
@@ -190,13 +212,14 @@ export default function Productos() {
             <tbody>
               {productosFiltrados.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-slate-500">
+                  <td colSpan={8} className="px-4 py-10 text-center text-slate-500">
                     No se encontraron productos con esos criterios.
                   </td>
                 </tr>
               ) : (
                 productosFiltrados.map((p) => (
                   <tr key={p.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50/80">
+                    <td className="px-4 py-3 font-medium text-[#2b5faa]">{p.codigo}</td>
                     <td className="px-4 py-3 font-medium text-[#1b3b6f]">{p.nombre}</td>
                     <td className="px-4 py-3 text-slate-700">{p.categoria}</td>
                     <td className="px-4 py-3 text-slate-700">{p.color}</td>
@@ -246,7 +269,7 @@ export default function Productos() {
         categorias={categorias}
         proveedores={proveedores}
         onCerrar={cerrarModal}
-        onGuardar={guardarProducto}
+        onGuardar={handleGuardar}
       />
     </div>
   )
