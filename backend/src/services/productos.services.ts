@@ -1,4 +1,5 @@
 import { pool } from '../config/db'
+import { crearProductoDTO } from '../types/productos.types'
 
 export async function obtenerProductos() {
 
@@ -29,7 +30,7 @@ export async function obtenerProductos() {
     return result.rows
 }
 
-export async function obtenerProducto(id: string) {
+export async function obtenerProducto(id: number) {
     const result = await pool.query(`
         SELECT 
             p.id,
@@ -60,7 +61,7 @@ export async function obtenerProducto(id: string) {
 }
 
 
-export async function crearProducto(product: any) {
+export async function crearProducto(product: crearProductoDTO) {
     const result = await pool.query(`
         INSERT INTO productos (codigo, nombre, precio_base, stock, categoria_id, color_id, proveedor_id)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -70,7 +71,7 @@ export async function crearProducto(product: any) {
     return result.rows[0]
 }
 
-export async function editarProducto(id: string, product: any) {
+export async function editarProducto(id: number, product: crearProductoDTO) {
     const result = await pool.query(`
         UPDATE productos
         SET codigo = $1, nombre = $2, precio_base = $3, stock = $4, categoria_id = $5, color_id = $6, proveedor_id = $7
@@ -81,7 +82,7 @@ export async function editarProducto(id: string, product: any) {
     return result.rows[0]
 }
 
-export async function eliminarProducto(id: string) {
+export async function eliminarProducto(id: number) {
     const result = await pool.query(`
         DELETE FROM productos
         WHERE id = $1

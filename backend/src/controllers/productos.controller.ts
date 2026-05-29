@@ -15,7 +15,7 @@ export async function obtenerProductos(req: Request, res: Response) {
 //obtener un producto por id
 export async function obtenerProducto(req: Request, res: Response) {
     try {
-        const producto = await productosService.obtenerProducto(req.params.id as string);
+        const producto = await productosService.obtenerProducto(Number(req.params.id));
         res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
@@ -35,7 +35,7 @@ export async function crearProducto(req: Request, res: Response) {
 //actualizar un producto
 export async function editarProducto(req: Request, res: Response) {
     try {
-        const producto = await productosService.editarProducto(req.params.id as string, req.body);
+        const producto = await productosService.editarProducto(Number(req.params.id), req.body); //
         res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
@@ -45,7 +45,7 @@ export async function editarProducto(req: Request, res: Response) {
 //eliminar un producto
 export async function eliminarProducto(req: Request, res: Response) {
     try {
-        const producto = await productosService.eliminarProducto(req.params.id as string);
+        const producto = await productosService.eliminarProducto(Number(req.params.id));
         res.json(producto);
     } catch (error) {
         res.status(500).json({ message: error });
