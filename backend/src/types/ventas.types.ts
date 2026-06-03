@@ -6,9 +6,9 @@ export interface Venta {
     total: number
 }
 
-export interface CrearVentaDTO {
+export interface crearVentaDTO {
     tipo_pago: string
-    productos: CrearDetalleVentaDTO[]
+    productos: crearDetalleVentaDTO[]
 }
 
 // detalle venta
@@ -21,7 +21,7 @@ export interface DetalleVenta {
     subtotal: number
 }
 
-export interface CrearDetalleVentaDTO {
+export interface crearDetalleVentaDTO {
     id_producto: number
     cantidad: number
 }

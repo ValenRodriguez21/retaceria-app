@@ -39,7 +39,7 @@ CREATE TABLE productos (
 INSERT INTO productos(
     codigo,
     nombre,
-    precio_base,
+    precio_base, 
     stock,
     categoria_id,
     color_id,
